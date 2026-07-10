@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un moment de pause</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0D0F0E;
+  --surface: #131715;
+  --surface-2: #1A1F1C;
+  --text: #EEE9DC;
+  --muted: #8A9189;
+  --accent: #7BAF8E;
+  --accent-dim: #3D6651;
+  --border: #242A26;
+  --danger: #C47B6A;
+}
+
+html, body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+.page {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 4rem 2rem 3rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2.8rem;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.headline {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text);
+  margin-top: 0.5rem;
+}
+
+.headline em { font-style: italic; color: var(--accent); }
+.divider { width: 40px; height: 1px; background: var(--accent-dim); }
+
+.section-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.reasons-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reason-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.reason-item:hover { border-color: var(--accent-dim); background: var(--surface-2); }
+
+.reason-item .marker {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 0.55rem;
+}
+
+.reason-text {
+  flex: 1; outline: none; background: transparent; border: none;
+  color: var(--text); font-family: inherit; font-size: inherit;
+  font-weight: inherit; line-height: inherit; resize: none; min-height: 1.5rem;
+}
+
+.add-reason {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.75rem 1rem; border: 1px dashed var(--border);
+  border-radius: 6px; background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 0.9rem; cursor: pointer;
+  transition: border-color 0.2s, color 0.2s; width: 100%;
+  text-align: left; margin-top: 0.5rem;
+}
+.add-reason:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+/* ── PANIC BUTTON ── */
+.panic-btn {
+  width: 100%;
+  padding: 0.9rem 1.4rem;
+  border-radius: 8px;
+  border: 1px solid rgba(123,175,142,0.35);
+  background: rgba(123,175,142,0.06);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.panic-btn:hover { background: rgba(123,175,142,0.12); border-color: var(--accent); }
+
+/* ── BREATHING OVERLAY ── */
+.breath-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #080A09;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  padding: 2rem;
+}
+
+.breath-overlay.active { display: flex; }
+
+.breath-close {
+  position: absolute;
+  top: 1.5rem; right: 1.5rem;
+  background: transparent; border: none;
+  color: var(--muted); font-size: 1.5rem;
+  cursor: pointer; line-height: 1; padding: 0.4rem;
+  transition: color 0.2s;
+}
+.breath-close:hover { color: var(--text); }
+
+.breath-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--muted);
+  text-align: center;
+}
+
+.breath-ring-wrap {
+  position: relative;
+  width: 220px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.breath-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-dim);
+  animation: breathe 8s ease-in-out infinite;
+}
+
+.breath-ring-inner {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: rgba(123,175,142,0.08);
+  border: 1px solid rgba(123,175,142,0.25);
+  animation: breathe-inner 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(0.55); opacity: 0.3; }
+  50%       { transform: scale(1);    opacity: 0.8; }
+}
+
+@keyframes breathe-inner {
+  0%, 100% { transform: scale(0.7);  background: rgba(123,175,142,0.05); }
+  50%       { transform: scale(1.3); background: rgba(123,175,142,0.18); }
+}
+
+.breath-label {
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  animation: breath-text 8s ease-in-out infinite;
+  min-height: 1.5em;
+  text-align: center;
+}
+
+@keyframes breath-text {
+  0%   { opacity: 0.4; content: ""; }
+  10%  { opacity: 1; }
+  45%  { opacity: 1; }
+  50%  { opacity: 0.4; }
+  60%  { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.breath-instruction {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.6;
+}
+
+/* ── HOBBIES ── */
+.hobbies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.hobby-card {
+  padding: 0.75rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.hobby-card:hover {
+  border-color: var(--accent-dim);
+  background: var(--surface-2);
+  transform: translateY(-1px);
+}
+
+.hobby-card:active { transform: translateY(0); }
+
+.hobby-icon { font-size: 1.1rem; flex-shrink: 0; line-height: 1.3; }
+
+.hobby-name {
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.35;
+  font-weight: 400;
+}
+
+/* ── CHECK-IN ── */
+.checkin {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+}
+
+.checkin-q {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.checkin-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.chip {
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover, .chip.selected { border-color: var(--accent-dim); color: var(--accent); background: rgba(123,175,142,0.08); }
+
+/* ── JOURNAL ── */
+.journal-section { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.journal-section label {
+  font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+.journal-section textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem; font-style: italic; line-height: 1.8;
+  padding: 1rem; resize: none; outline: none; min-height: 100px;
+  transition: border-color 0.2s;
+}
+.journal-section textarea::placeholder { color: var(--muted); font-style: italic; }
+.journal-section textarea:focus { border-color: var(--accent-dim); }
+
+.save-note {
+  align-self: flex-end; font-size: 12px; color: var(--muted);
+  opacity: 0; transition: opacity 0.3s;
+}
+.save-note.show { opacity: 1; }
+
+/* ── BOTTOM BAR ── */
+.bottom-bar {
+  margin-top: auto;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+
+.streak { display: flex; flex-direction: column; gap: 0.2rem; }
+.streak-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.streak-value { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.streak-sub { font-size: 12px; color: var(--muted); }
+
+.exit-wrapper { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; }
+.countdown-text { font-size: 12px; color: var(--muted); text-align: right; min-height: 1.2em; }
+
+.btn-exit {
+  padding: 0.6rem 1.4rem; border-radius: 5px;
+  border: 1px solid var(--danger); background: transparent;
+  color: var(--danger); font-family: inherit; font-size: 0.85rem;
+  font-weight: 400; cursor: pointer;
+  transition: background 0.2s, opacity 0.3s;
+  opacity: 0.3; pointer-events: none;
+}
+.btn-exit.active { opacity: 1; pointer-events: auto; }
+.btn-exit.active:hover { background: rgba(196,123,106,0.1); }
+
+@media (max-width: 480px) {
+  .page { padding: 2.5rem 1.25rem; }
+  .bottom-bar { flex-direction: column; align-items: flex-start; }
+  .exit-wrapper { align-items: flex-start; }
+  .countdown-text { text-align: left; }
+  .hobbies-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- BREATHING OVERLAY -->
+<div class="breath-overlay" id="breath-overlay" role="dialog" aria-label="Exercice de respiration">
+  <button class="breath-close" onclick="closeBreath()" aria-label="Fermer">✕</button>
+  <p class="breath-title">Reste ici avec moi un moment.</p>
+  <div class="breath-ring-wrap">
+    <div class="breath-ring"></div>
+    <div class="breath-ring-inner"></div>
+  </div>
+  <p class="breath-label" id="breath-label">Inspire…</p>
+  <p class="breath-instruction">Suis le cercle. Inspire quand il grandit, expire quand il rétrécit. Reste dans le cycle aussi longtemps que tu veux.</p>
+</div>
+
+<div class="page">
+
+  <div>
+    <p class="eyebrow">Pause obligatoire</p>
+    <h1 class="headline">Tu es plus fort que<br><em>cette impulsion.</em></h1>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PANIC BUTTON -->
+  <button class="panic-btn" onclick="openBreath()">
+    <span style="font-size:1.1rem">◯</span>
+    Exercice de respiration — reviens à toi
+  </button>
+
+  <!-- REASONS -->
+  <section>
+    <p class="section-label">Tes raisons</p>
+    <ul class="reasons-list" id="reasons-list"></ul>
+    <button class="add-reason" id="add-btn">＋ &nbsp;Ajouter une raison</button>
+  </section>
+
+  <!-- HOBBIES -->
+  <section>
+    <p class="section-label">Fais quelque chose de vrai à la place</p>
+    <div class="hobbies-grid" id="hobbies-grid"></div>
+  </section>
+
+  <!-- CHECK-IN -->
+  <div class="checkin">
+    <p class="checkin-q">Qu'est-ce qui t'a amené ici maintenant ?</p>
+    <div class="checkin-btns">
+      <button class="chip" onclick="selectChip(this)">Ennui</button>
+      <button class="chip" onclick="selectChip(this)">Stress</button>
+      <button class="chip" onclick="selectChip(this)">Solitude</button>
+      <button class="chip" onclick="selectChip(this)">Fatigue</button>
+      <button class="chip" onclick="selectChip(this)">Habitude</button>
+      <button class="chip" onclick="selectChip(this)">Autre</button>
+    </div>
+  </div>
+
+  <!-- JOURNAL -->
+  <section class="journal-section">
+    <label for="journal">Ce que je ressens maintenant</label>
+    <textarea id="journal" placeholder="Écris ce qui se passe en toi..." rows="4"></textarea>
+    <span class="save-note" id="save-note">Sauvegardé localement.</span>
+  </section>
+
+  <!-- BOTTOM -->
+  <div class="bottom-bar">
+    <div class="streak">
+      <span class="streak-label">Jours sans rechute</span>
+      <span class="streak-value" id="streak-count">—</span>
+      <span class="streak-sub" id="streak-since"></span>
+    </div>
+    <div class="exit-wrapper">
+      <span class="countdown-text" id="countdown-text">Attends 10 secondes…</span>
+      <button class="btn-exit" id="exit-btn" onclick="goBack()">Quitter quand même</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ── HOBBIES ── */
+const HOBBIES = [
+  { icon: '🧶', name: 'Crochet' },
+  { icon: '📺', name: 'Long-form content' },
+  { icon: '🍞', name: 'Baking & cooking' },
+  { icon: '📖', name: 'Reading' },
+  { icon: '✍️', name: 'Writing & journaling' },
+  { icon: '🏃', name: 'Bouger le corps' },
+  { icon: '🗺️', name: 'Explorer le quartier' },
+  { icon: '🎛️', name: 'Produire de la musique' },
+  { icon: '🎬', name: 'Filmer & monter' },
+  { icon: '😴', name: 'Sieste' },
+  { icon: '✏️', name: 'Dessin' },
+  { icon: '📸', name: 'Scrapbooking' },
+  { icon: '🧩', name: 'Puzzles' },
+  { icon: '🎧', name: 'Écouter un album' },
+  { icon: '🔍', name: 'Recherche étrange' },
+];
+
+function renderHobbies() {
+  const grid = document.getElementById('hobbies-grid');
+  HOBBIES.forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'hobby-card';
+    el.innerHTML = `<span class="hobby-icon">${h.icon}</span><span class="hobby-name">${h.name}</span>`;
+    el.addEventListener('click', () => {
+      el.style.borderColor = 'var(--accent)';
+      el.style.background = 'rgba(123,175,142,0.1)';
+      setTimeout(() => {
+        el.style.borderColor = '';
+        el.style.background = '';
+      }, 1800);
+    });
+    grid.appendChild(el);
+  });
+}
+
+/* ── BREATHING ── */
+let breathInterval;
+const phases = [
+  { label: 'Inspire…', dur: 4000 },
+  { label: 'Retiens…', dur: 1500 },
+  { label: 'Expire…', dur: 4000 },
+  { label: 'Retiens…', dur: 1500 },
+];
+let phaseIdx = 0;
+
+function runBreathCycle() {
+  const el = document.getElementById('breath-label');
+  function next() {
+    const p = phases[phaseIdx % phases.length];
+    el.textContent = p.label;
+    phaseIdx++;
+    breathInterval = setTimeout(next, p.dur);
+  }
+  next();
+}
+
+function openBreath() {
+  document.getElementById('breath-overlay').classList.add('active');
+  phaseIdx = 0;
+  runBreathCycle();
+}
+
+function closeBreath() {
+  document.getElementById('breath-overlay').classList.remove('active');
+  clearTimeout(breathInterval);
+}
+
+/* ── REASONS ── */
+const DEFAULT_REASONS = [
+  "Ma clarté mentale vaut plus que cette impulsion.",
+  "Je bâtis une discipline que j'admirerai.",
+  "Je veux des relations réelles, pas un substitut."
+];
+
+function loadReasons() {
+  try { return JSON.parse(localStorage.getItem('blocage_reasons')) || DEFAULT_REASONS; }
+  catch { return DEFAULT_REASONS; }
+}
+
+function saveReasons() {
+  const items = [...document.querySelectorAll('.reason-text')].map(t => t.value.trim()).filter(Boolean);
+  localStorage.setItem('blocage_reasons', JSON.stringify(items));
+}
+
+function addReasonItem(text = '') {
+  const list = document.getElementById('reasons-list');
+  const li = document.createElement('li');
+  li.className = 'reason-item';
+  li.innerHTML = `<span class="marker"></span><textarea class="reason-text" rows="1"></textarea>`;
+  const ta = li.querySelector('textarea');
+  ta.value = text;
+  ta.addEventListener('input', () => { autoResize(ta); saveReasons(); });
+  ta.addEventListener('blur', saveReasons);
+  list.appendChild(li);
+  autoResize(ta);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+document.getElementById('add-btn').addEventListener('click', () => {
+  addReasonItem('');
+  const all = document.querySelectorAll('.reason-text');
+  all[all.length - 1].focus();
+});
+
+/* ── JOURNAL ── */
+const journal = document.getElementById('journal');
+const saveNote = document.getElementById('save-note');
+let saveTimer;
+journal.value = localStorage.getItem('blocage_journal') || '';
+journal.addEventListener('input', () => {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localStorage.setItem('blocage_journal', journal.value);
+    saveNote.classList.add('show');
+    setTimeout(() => saveNote.classList.remove('show'), 1800);
+  }, 800);
+});
+
+/* ── CHIPS ── */
+function selectChip(btn) {
+  btn.classList.toggle('selected');
+  const t = [...document.querySelectorAll('.chip.selected')].map(c => c.textContent).join(', ');
+  localStorage.setItem('blocage_trigger', t);
+}
+
+/* ── STREAK ── */
+function renderStreak() {
+  const start = localStorage.getItem('blocage_streak_start');
+  const el = document.getElementById('streak-count');
+  const sub = document.getElementById('streak-since');
+  if (!start) {
+    el.textContent = '0';
+    sub.textContent = "Commencer aujourd'hui";
+    localStorage.setItem('blocage_streak_start', Date.now().toString());
+  } else {
+    const days = Math.floor((Date.now() - parseInt(start)) / 86400000);
+    el.textContent = days;
+    const fmt = new Intl.DateTimeFormat('fr-CA', { day: 'numeric', month: 'long' });
+    sub.textContent = 'depuis le ' + fmt.format(new Date(parseInt(start)));
+  }
+}
+
+/* ── COUNTDOWN ── */
+let countdown = 10;
+const countdownEl = document.getElementById('countdown-text');
+const exitBtn = document.getElementById('exit-btn');
+const timer = setInterval(() => {
+  countdown--;
+  if (countdown > 0) {
+    countdownEl.textContent = `Attends ${countdown} seconde${countdown > 1 ? 's' : ''}…`;
+  } else {
+    clearInterval(timer);
+    countdownEl.textContent = '';
+    exitBtn.classList.add('active');
+  }
+}, 1000);
+
+function goBack() {
+  if (document.referrer) window.history.back();
+  else window.close();
+}
+
+/* ── INIT ── */
+loadReasons().forEach(r => addReasonItem(r));
+renderHobbies();
+renderStreak();
+</script>
+</body>
+</html>
