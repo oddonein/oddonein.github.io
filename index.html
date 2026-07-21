@@ -572,12 +572,7 @@ function selectChip(btn) {
 }
 
 /* ── STREAK ── */
-function resetStreak() {
-  if (confirm('Réinitialiser le compteur à aujourd\'hui ?')) {
-    localStorage.setItem('blocage_streak_start', Date.now().toString());
-    renderStreak();
-  }
-  function renderStreak() {
+function renderStreak() {
   const start = localStorage.getItem('blocage_streak_start');
   const el = document.getElementById('streak-count');
   const sub = document.getElementById('streak-since');
@@ -611,6 +606,13 @@ const timer = setInterval(() => {
 function goBack() {
   if (document.referrer) window.history.back();
   else window.close();
+}
+
+function resetStreak() {
+  if (confirm("Réinitialiser le compteur à aujourd'hui ?")) {
+    localStorage.setItem('blocage_streak_start', Date.now().toString());
+    renderStreak();
+  }
 }
 
 /* ── INIT ── */
