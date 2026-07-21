@@ -429,6 +429,7 @@ html, body {
       <span class="streak-label">Jours sans rechute</span>
       <span class="streak-value" id="streak-count">—</span>
       <span class="streak-sub" id="streak-since"></span>
+      <button onclick="resetStreak()" style="margin-top:0.4rem;background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">Réinitialiser</button>
     </div>
     <div class="exit-wrapper">
       <span class="countdown-text" id="countdown-text">Attends 10 secondes…</span>
@@ -571,7 +572,13 @@ function selectChip(btn) {
 }
 
 /* ── STREAK ── */
-function renderStreak() {
+function resetStreak() {
+  if (confirm('Réinitialiser le compteur à aujourd\'hui ?')) {
+    localStorage.setItem('blocage_streak_start', Date.now().toString());
+    renderStreak();
+  }
+}
+  function renderStreak() {
   const start = localStorage.getItem('blocage_streak_start');
   const el = document.getElementById('streak-count');
   const sub = document.getElementById('streak-since');
