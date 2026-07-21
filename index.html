@@ -577,7 +577,6 @@ function resetStreak() {
     localStorage.setItem('blocage_streak_start', Date.now().toString());
     renderStreak();
   }
-}
   function renderStreak() {
   const start = localStorage.getItem('blocage_streak_start');
   const el = document.getElementById('streak-count');
